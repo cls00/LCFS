@@ -1,0 +1,164 @@
+<head>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <!--<script src="../../dist/3d-force-graph.js"></script>-->
+</head>
+
+<body>
+    <div id="3d-graph"></div>
+
+    <script type="module">
+        import {
+            UnrealBloomPass
+        } from '//cdn.skypack.dev/three@0.136/examples/jsm/postprocessing/UnrealBloomPass.js';
+        //
+        var paused = false;
+        var transitionTime;
+        var stableTicks = 50;
+        var ticker = 0;
+        // initial LCFS sequence
+        const N = 60;
+        const mysequence = [1];
+        const repetitions = 12;
+
+        // LCFS to Graph
+        const g = ParseLCFS(N, mysequence, repetitions);
+
+        // Create Force Graph
+        const Graph = ForceGraph3D()
+            (document.getElementById('3d-graph'))
+            .cooldownTicks(100)
+            .graphData(g);
+
+        Graph.nodeColor(_ => "#ffffff");//#5577dd
+        Graph.linkOpacity(0.1);
+        Graph.onEngineStop(() => Graph.zoomToFit(1400));
+        // Repeat function every period
+
+        var period = 16.0;
+
+        var pulser = setPulse(N, period);
+
+        var targetGraph = ParseLCFS(...generate_randomLCFS(N));
+
+
+        var nodesToRemove = Graph.graphData().nodes.filter(v => !targetGraph.nodes.includes(v));
+        var nodesToAdd = targetGraph.nodes.filter(v => !Graph.graphData().nodes.includes(v));
+        var linksToRemove = Graph.graphData().links.filter(e => !targetGraph.nodes.includes(e));
+        var linksToAdd = targetGraph.links.filter(e => !Graph.graphData().nodes.includes(e));
+
+
+
+        function setPulse(GraphSize, period) {
+            return setInterval(() => {
+                if (!paused) {
+                    var index;
+                    let { nodes, links } = Graph.graphData();
+                    if (linksToRemove.length > 0) {
+                        index = links.indexOf(linksToRemove.pop());
+                        if (index > -1) {
+                            links.splice(index, 1);
+                        }
+                    } else if (nodesToAdd.length > 0) {
+                        nodes = [...nodes, nodesToAdd.pop()];
+                    } else if (nodesToRemove.length > 0) {
+                        index = nodes.indexOf(nodesToRemove.pop());
+                        if (index > -1) {
+                            nodes.splice(index, 1);
+                        }
+                    } else if (linksToAdd.length > 0) {
+                        links = [...links, linksToAdd.pop()];
+                    } else if (ticker < stableTicks) {
+                        ticker++;
+                    } else {
+                        targetGraph = ParseLCFS(...generate_randomLCFS(N));
+                        nodesToRemove = Graph.graphData().nodes.filter(v => !targetGraph.nodes.includes(v));
+                        nodesToAdd = targetGraph.nodes.filter(v => !Graph.graphData().nodes.includes(v));
+                        linksToRemove = Graph.graphData().links.filter(e => !targetGraph.nodes.includes(e));
+                        linksToAdd = targetGraph.links.filter(e => !Graph.graphData().nodes.includes(e));
+                        ticker = 0;
+                    }
+
+                    Graph.graphData({ nodes, links });
+                }
+
+
+            }, period);
+        }
+
+        function generate_randomLCFS(size) {
+
+            const vertices = Math.max(Math.floor(Math.random() * size), 1);
+            const len = Math.floor(Math.random() * size / 2);
+
+            const random_sequence = [...Array(len)].map(i => (Math.floor(Math.random() * size)));
+            const random_repetitions = Math.max(Math.floor(Math.random() * size / 8), 1);
+
+            return [vertices, random_sequence, random_repetitions];
+
+        }
+
+
+        function ParseLCFS(N_vertices, sequence, repetitions) {
+
+            var nodesIndices = [...Array(N_vertices).keys()].map(i => ({
+                id: i
+            }));
+
+            var edges = [];
+            var currentVertex = 0;
+
+            //for (let r = 0; r < repetitions; r++) {
+            for (let i = 0; i < sequence.length * repetitions; i++) {
+                if (sequence[i % sequence.length] != 0) {
+                    const target = (currentVertex + sequence[i % sequence.length]) % N_vertices;
+
+                    edges.push({
+                        source: currentVertex,
+                        target: target
+                    });
+                }
+                currentVertex = (currentVertex + 1) % N_vertices;
+
+            }
+            //}
+
+
+            return {
+                nodes: nodesIndices,
+                links: edges
+            };
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.code === 'Space') {
+                paused = !paused;
+                console.log("Pause: " + paused);
+            } else if (event.key === '2') {
+                period = period * 2;
+                clearInterval(pulser);
+                pulser = setPulse(N, period);
+                console.log("Period: " + period);
+            }
+            if (event.key === "1") {
+                clearInterval(pulser);
+                period = period / 2;
+                pulser = setPulse(N, period);
+                console.log("Period: " + period);
+            }
+        });
+
+
+        /* const bloomPass = new UnrealBloomPass();
+         bloomPass.strength = 2.2;
+         bloomPass.radius = 1;
+         bloomPass.threshold = 0.3;
+         Graph.postProcessingComposer().addPass(bloomPass);
+ */
+    </script>
+</body>

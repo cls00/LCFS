@@ -1,0 +1,63 @@
+<head>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <!--<script src="../../dist/3d-force-graph.js"></script>-->
+</head>
+
+<body>
+    <div id="3d-graph"></div>
+
+    <script>
+        // LCFS sequence
+        const N = 12;
+        //const mysequence = [...Array(N).keys()].slice(1);
+        const mysequence = [1, 2, 3, 4, 5, 6];
+        const repetitions = 12;
+
+        // LCFS to Graph
+        const g = ParseLCFS(N, mysequence, repetitions);
+
+        // Create Force Graph
+        const Graph = ForceGraph3D()
+            (document.getElementById('3d-graph'))
+            .graphData(g);
+
+
+        function ParseLCFS(N_vertices, sequence, repetitions) {
+
+            var nodesIndices = [...Array(N_vertices).keys()].map(i => ({
+                id: i
+            }));
+
+            var edges = [];
+            var currentVertex = 0;
+
+            //for (let r = 0; r < repetitions; r++) {
+            for (let i = 0; i < sequence.length * repetitions; i++) {
+                if (sequence[i] != 0) {
+                    target = (currentVertex + sequence[i % sequence.length]) % N_vertices;
+
+                    edges.push({
+                        source: currentVertex,
+                        target: target
+                    });
+                }
+                currentVertex = (currentVertex + 1) % N_vertices;
+
+            }
+            //}
+
+
+            return {
+                nodes: nodesIndices,
+                links: edges
+            };
+        }
+
+    </script>
+</body>

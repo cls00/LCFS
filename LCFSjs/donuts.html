@@ -1,0 +1,106 @@
+<head>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+    <script src="//unpkg.com/three@0.136.0/build/three.js"></script>
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="//unpkg.com/three-spritetext"></script>
+    <!--<script src="../../dist/3d-force-graph.js"></script>-->
+</head>
+
+<body>
+    <div id="3d-graph"></div>
+
+    <script type="module">
+        import {
+            UnrealBloomPass
+        } from '//cdn.skypack.dev/three@0.136/examples/jsm/postprocessing/UnrealBloomPass.js';
+        // LCFS sequence
+        const N = 16;
+        const mysequence = [3];
+        const repetitions = 12;
+
+        const myseq = HD(N);
+        // LCFS to Graph
+        const g = ParseLCFS(N * N, myseq, 1);
+
+        // Create Force Graph
+        const Graph = ForceGraph3D()
+            (document.getElementById('3d-graph'))
+            .forceEngine("ngraph")
+            .cooldownTicks(11000)
+            .nodeThreeObject(node => {
+                const sprite = new SpriteText(node.id);
+                sprite.material.depthWrite = false; // make sprite background transparent
+                sprite.textHeight = 8;
+                return sprite;
+            })
+            .graphData(g);
+
+
+        // hyperdonuts d=2
+        // N-1 copies of 1, followed by N^2 - N + 1
+        // all copied N-1 times
+        // followed by N^2 copies of N
+        function HD(N) {
+            var HDsequence = [];
+
+            HDsequence.push(...Array(N - 1).fill(1));
+            HDsequence.push(N * N - N + 1);
+            const subSequence = Array.from(HDsequence);
+            for (let i = 0; i < N - 1; i++) {
+                HDsequence.push(...subSequence);
+            }
+            HDsequence.push(...Array(N * N).fill(N));
+
+            return HDsequence;
+        }
+
+
+        function ParseLCFS(N_vertices, sequence, repetitions) {
+
+            var nodesIndices = [...Array(N_vertices).keys()].map(i => ({
+                id: i
+            }));
+
+            var edges = [];
+            var currentVertex = 0;
+
+            //for (let r = 0; r < repetitions; r++) {
+            for (let i = 0; i < sequence.length * repetitions; i++) {
+                if (sequence[i] != 0) {
+                    var target = (currentVertex + sequence[i % sequence.length]) % N_vertices;
+
+                    edges.push({
+                        source: currentVertex,
+                        target: target
+                    });
+                }
+                currentVertex = (currentVertex + 1) % N_vertices;
+
+            }
+            //}
+
+
+            return {
+                nodes: nodesIndices,
+                links: edges
+            };
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.code === 'Space') {
+                Graph.numDimensions(3);
+            }
+        });
+
+        const bloomPass = new UnrealBloomPass();
+        bloomPass.strength = 2.2;
+        bloomPass.radius = 1;
+        bloomPass.threshold = 0.3;
+        Graph.postProcessingComposer().addPass(bloomPass);
+
+    </script>
+</body>

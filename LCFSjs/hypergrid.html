@@ -1,0 +1,125 @@
+<head>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+    <script src="//unpkg.com/three@0.136.0/build/three.js"></script>
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="//unpkg.com/three-spritetext"></script>
+    <!--<script src="../../dist/3d-force-graph.js"></script>-->
+</head>
+
+<body>
+    <div id="3d-graph"></div>
+
+    <script type="module">
+        import {
+            UnrealBloomPass
+        } from '//cdn.skypack.dev/three@0.136/examples/jsm/postprocessing/UnrealBloomPass.js';
+        // LCFS sequence
+        const N = 10;
+        const mysequence = [3];
+        const repetitions = 12;
+
+        const myseq = HD(N);
+
+        const side = 8;
+        const dimensions = 3;
+        const mygrid = HGG(side, dimensions);
+        // LCFS to Graph
+        const g = ParseLCFS(Math.pow(side, dimensions), mygrid, 1);
+
+        // Create Force Graph
+        const Graph = ForceGraph3D()
+            (document.getElementById('3d-graph'))
+            .forceEngine("ngraph")
+            .cooldownTicks(11000)
+            .nodeThreeObject(node => {
+                const sprite = new SpriteText(node.id);
+                sprite.material.depthWrite = false; // make sprite background transparent
+                sprite.textHeight = 8;
+                return sprite;
+            })
+            .graphData(g);
+
+
+
+        function HD(N) {
+            var HDsequence = [];
+
+            HDsequence.push(...Array(N - 1).fill(1));
+            HDsequence.push(N * N - N + 1);
+            const subSequence = Array.from(HDsequence);
+            for (let i = 0; i < N - 1; i++) {
+                HDsequence.push(...subSequence);
+            }
+            HDsequence.push(...Array(N * N).fill(N));
+
+            return HDsequence;
+        }
+
+        // Hyper Grid Generator.
+        //For each  i  from 0 to  d−1  it creates a subsequence with a value  N^i  repeated  N^i+1−^Ni  times, followed by  N^i  zeros, all repeated  N^d−i  times.
+        function HGG(N, d) {
+            var HGGsequence = []
+
+            for (let i = 0; i < d; i++) {
+                var subsequence = [];
+                subsequence.push(...Array(Math.pow(N, i + 1) - Math.pow(N, i)).fill(Math.pow(N, i)));
+                subsequence.push(...Array(Math.pow(N, i)).fill(0));
+                var copies = [];
+                for (let r = 0; r < Math.pow(N, d - i); r++) {
+                    copies.push(...subsequence);
+                }
+                HGGsequence.push(...copies);
+            }
+            return HGGsequence;
+        }
+
+
+        function ParseLCFS(N_vertices, sequence, repetitions) {
+
+            var nodesIndices = [...Array(N_vertices).keys()].map(i => ({
+                id: i
+            }));
+
+            var edges = [];
+            var currentVertex = 0;
+
+            //for (let r = 0; r < repetitions; r++) {
+            for (let i = 0; i < sequence.length * repetitions; i++) {
+                if (sequence[i] != 0) {
+                    var target = (currentVertex + sequence[i % sequence.length]) % N_vertices;
+
+                    edges.push({
+                        source: currentVertex,
+                        target: target
+                    });
+                }
+                currentVertex = (currentVertex + 1) % N_vertices;
+
+            }
+            //}
+
+
+            return {
+                nodes: nodesIndices,
+                links: edges
+            };
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.code === 'Space') {
+                Graph.numDimensions(3);
+            }
+        });
+
+        const bloomPass = new UnrealBloomPass();
+        bloomPass.strength = 1.2;
+        bloomPass.radius = 1;
+        bloomPass.threshold = 0.3;
+        Graph.postProcessingComposer().addPass(bloomPass);
+
+    </script>
+</body>
