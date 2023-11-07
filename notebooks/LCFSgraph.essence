@@ -1,0 +1,11 @@
+letting n_vertices be 3
+letting seq be [2, 1]
+letting sequenceLength be 2
+letting repetitions be 2
+letting vertices be domain int(0..n_vertices)
+letting indicess be domain int(0..sequenceLength*repetitions)
+
+find edges : relation of (vertices * vertices)
+  such that
+    forAll i : indicess .
+      exists vertice : vertices . edges(i%n_vertices, ((i%n_vertices)+seq[1+(i%sequenceLength)])%n_vertices)
