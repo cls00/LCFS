@@ -2,6 +2,6 @@
 
 The LCFS notation is a natural extention of the LCF notation [[1](https://en.wikipedia.org/wiki/LCF_notation),[2](https://mathworld.wolfram.com/LCFNotation.html)], which makes 0, 1, N-1 and N valid inputs in a sequence. Where N is the number of nodes in the graph. Additionally the number of nodes is more clearly specified using the pattern NumberOfNodes[Sequence]Repetitions. The construction criteria is the same as per LCF notation, but 0 causes a 'skip' where an edge is not created, 1 and N-1 behave as one would expect, and N creates self-loops. This allows the notation to encode any graph.
 
-LCFS notation pairs well with set-builder notation, which can represent arbitrary integers sequences in a even more compact manner that are then turn into graphs.
+LCFS notation pairs well with [set-builder notation](https://en.wikipedia.org/wiki/Set-builder_notation), which can represent arbitrary integers sequences in a even more compact manner that are then turn into graphs.
 One notable example is the generator that produces grid graphs of any dimention and size using only 2 parameters.[Code](notebooks\Hyper_Grid_Gen.ipynb) [Colab](https://colab.research.google.com/drive/1ciZGDrRD7UfeUsN-jrmjXx3sKsWfQ-Zg?usp=sharing) [Diary Notes(PDF)](writings\TheHyper-Grid.pdf)[Vis in JS](LCFSjs\hypergrid.html)
 Another example is the n-dimentional torus grid graph. [Code](notebooks\Kleins_Donuts.ipynb) [Colab](https://colab.research.google.com/drive/1Ze4YkTVtZXN2nJgxO1bfCIREuNzjdHin?usp=sharing) [2D donuts Visualisation in JS](LCFSjs\donuts.html)
