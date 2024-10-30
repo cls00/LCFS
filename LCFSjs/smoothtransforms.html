@@ -22,7 +22,7 @@
         var stableTicks = 50;
         var ticker = 0;
         // initial LCFS sequence
-        const N = 60;
+        const N = 10;
         const mysequence = [1];
         const repetitions = 12;
 
@@ -36,7 +36,8 @@
             .graphData(g);
 
         Graph.nodeColor(_ => "#ffffff");//#5577dd
-        Graph.linkOpacity(0.1);
+        Graph.linkOpacity(0.2);
+        Graph.linkWidth(1);
         Graph.onEngineStop(() => Graph.zoomToFit(1400));
         // Repeat function every period
 
@@ -93,11 +94,11 @@
 
         function generate_randomLCFS(size) {
 
-            const vertices = Math.max(Math.floor(Math.random() * size), 1);
-            const len = Math.floor(Math.random() * size / 2);
+            const vertices = Math.max(Math.floor(Math.random() * size)+size, 1);
+            const len = Math.floor(Math.random() * size );
 
             const random_sequence = [...Array(len)].map(i => (Math.floor(Math.random() * size)));
-            const random_repetitions = Math.max(Math.floor(Math.random() * size / 8), 1);
+            const random_repetitions = Math.max(Math.floor(Math.random() * size / 2), 1);
 
             return [vertices, random_sequence, random_repetitions];
 
